@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Weather Forecast - Lagos</title>
+  <style>
+    body { font-family: Arial, sans-serif; padding: 20px; background: #f0f0f0; }
+    h1 { color: #333; }
+    .day { background: white; margin: 10px 0; padding: 10px; border-radius: 5px; }
+  </style>
+</head>
+<body>
+  <h1>7-Day Weather Forecast for Lagos</h1>
+  <div id="forecast"></div>
+
+  <script>
+    const url = 'https://api.open-meteo.com/v1/forecast?latitude=6.5244&longitude=3.3792&daily=temperature_2m_max,temperature_2m_min&timezone=Africa%2FLagos';
+
+    fetch(url)
+      .then(response => response.json())
+      .then(data => {
+        const dates = data.daily.time;
+        const maxTemps = data.daily.temperature_2m_max;
+        const minTemps = data.daily.temperature_2m_min;
+        const forecastDiv = document.getElementById('forecast');
+
+        for (let i = 0; i < dates.length; i++) {
+          const dayHTML = `
+            <div class="day">
+              <strong>${dates[i]}</strong><br>
+              Max Temp: ${maxTemps[i]}°C<br>
+              Min Temp: ${minTemps[i]}°C
+            </div>
+          `;
+          forecastDiv.innerHTML += dayHTML;
+        }
+      })
+      .catch(error => {
+        document.getElementById('forecast').innerText = 'Error loading forecast.';
+        console.error(error);
+      });
+  </script>
+</body>
+</html>
