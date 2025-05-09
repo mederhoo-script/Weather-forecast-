@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Simple Weather App</title>
+    <title>Weather App with Location</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -15,53 +15,113 @@
         input, button {
             padding: 10px;
             margin: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        button {
+            background-color: #4285f4;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #3367d6;
         }
         #weather-result {
             margin-top: 20px;
             padding: 15px;
             border: 1px solid #ddd;
             border-radius: 5px;
+            background-color: #f9f9f9;
+        }
+        .weather-icon {
+            width: 64px;
+            height: 64px;
+        }
+        .location-btn {
+            background-color: #0f9d58;
+        }
+        .loading {
+            color: #666;
+            font-style: italic;
         }
     </style>
 </head>
 <body>
-    <h1>🌤️ Weather App</h1>
-    <input type="text" id="city-input" placeholder="Enter city name" required>
-    <button onclick="getWeather()">Get Weather</button>
+    <h1>🌤️ MEDERHOO Weather App</h1>
+    <h3>@web3_uni Assignment</h3>
+    <div>
+        <input type="text" id="city-input" placeholder="Enter city name">
+        <button onclick="getWeatherByCity()">Search</button>
+        <button class="location-btn" onclick="getWeatherByLocation()">Use My Location</button>
+    </div>
     <div id="weather-result"></div>
 
     <script>
         const API_KEY = "3ff06e92cbd04821a8c184053250905"; // Replace with your key
+        const weatherResult = document.getElementById("weather-result");
 
-        async function getWeather() {
+        // Get weather by city name
+        async function getWeatherByCity() {
             const city = document.getElementById("city-input").value;
             if (!city) return alert("Please enter a city!");
+            
+            weatherResult.innerHTML = '<p class="loading">Loading weather data...</p>';
+            fetchWeather(`q=${city}`);
+        }
 
+        // Get weather by current location
+        function getWeatherByLocation() {
+            weatherResult.innerHTML = '<p class="loading">Detecting your location...</p>';
+            
+            if (!navigator.geolocation) {
+                weatherResult.innerHTML = '<p style="color: red;">Geolocation is not supported by your browser</p>';
+                return;
+            }
+
+            navigator.geolocation.getCurrentPosition(
+                (position) => {
+                    const lat = position.coords.latitude;
+                    const lon = position.coords.longitude;
+                    fetchWeather(`q=${lat},${lon}`);
+                },
+                (error) => {
+                    weatherResult.innerHTML = `<p style="color: red;">Location access denied. Error: ${error.message}</p>`;
+                }
+            );
+        }
+
+        // Fetch weather from API
+        async function fetchWeather(query) {
             try {
                 const response = await fetch(
-                    `https://api.weatherapi.com/v1/current.json?key=${API_KEY}&q=${city}`
+                    `https://api.weatherapi.com/v1/current.json?key=${API_KEY}&${query}`
                 );
                 const data = await response.json();
 
                 if (data.error) {
-                    document.getElementById("weather-result").innerHTML = 
-                        `<p style="color: red;">${data.error.message}</p>`;
+                    weatherResult.innerHTML = `<p style="color: red;">${data.error.message}</p>`;
                 } else {
                     const { location, current } = data;
-                    document.getElementById("weather-result").innerHTML = `
+                    weatherResult.innerHTML = `
                         <h2>${location.name}, ${location.country}</h2>
                         <p>🌡️ Temp: ${current.temp_c}°C (Feels like ${current.feelslike_c}°C)</p>
                         <p>💧 Humidity: ${current.humidity}%</p>
                         <p>🌬️ Wind: ${current.wind_kph} km/h</p>
                         <p>☁️ Condition: ${current.condition.text}</p>
-                        <img src="https:${current.condition.icon}" alt="Weather icon">
+                        <img class="weather-icon" src="https:${current.condition.icon}" alt="Weather icon">
+                        <p><small>Last updated: ${location.localtime}</small></p>
                     `;
                 }
             } catch (error) {
-                document.getElementById("weather-result").innerHTML = 
-                    `<p style="color: red;">Failed to fetch weather. Try again!</p>`;
+                weatherResult.innerHTML = `<p style="color: red;">Failed to fetch weather. Try again!</p>`;
             }
         }
+
+        // Optional: Load weather for current location on page load
+        window.onload = function() {
+            getWeatherByLocation();
+        };
     </script>
 </body>
 </html>
